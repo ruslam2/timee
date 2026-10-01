@@ -194,12 +194,10 @@ export default function ScheduleEditor() {
 
       {/* Legend */}
       <div className="flex flex-wrap gap-2 mb-4">
-        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Во время</span>
-        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">Раньше ≤15мин</span>
-        <span className="px-2 py-1 bg-red-100 text-red-800 text-xs rounded">Опоздание ≥15мин</span>
-        <span className="px-2 py-1 bg-orange-100 text-orange-800 text-xs rounded">Ушёл раньше</span>
-        <span className="px-2 py-1 bg-purple-100 text-purple-800 text-xs rounded">Ушёл позже</span>
-        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">Запланировано</span>
+        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs rounded">Смена открыта</span>
+        <span className="px-2 py-1 bg-yellow-100 text-yellow-800 text-xs rounded">Смена не закрыта</span>
+        <span className="px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded">Смена не открыта</span>
+        <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">Выходной</span>
       </div>
 
       {/* Schedule Table */}

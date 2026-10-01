@@ -23,59 +23,40 @@ export function calculateScheduledHours(schedule: ScheduleEntry): number {
 }
 
 export function getScheduleStatus(schedule: ScheduleEntry): string {
-  if (!schedule.actualStart || !schedule.actualEnd) return 'scheduled';
-  
-  const scheduledStart = schedule.startTime.split(':').map(Number);
-  const scheduledEnd = schedule.endTime.split(':').map(Number);
-  const actualStart = schedule.actualStart.split(':').map(Number);
-  const actualEnd = schedule.actualEnd.split(':').map(Number);
-  
-  const scheduledStartMin = scheduledStart[0] * 60 + scheduledStart[1];
-  const scheduledEndMin = scheduledEnd[0] * 60 + scheduledEnd[1];
-  const actualStartMin = actualStart[0] * 60 + actualStart[1];
-  const actualEndMin = actualEnd[0] * 60 + actualEnd[1];
-  
-  const startDiff = Math.abs(actualStartMin - scheduledStartMin);
-  const endDiff = Math.abs(actualEndMin - scheduledEndMin);
-  
-  let status = 'on-time';
-  
-  if (startDiff >= 15) {
-    status = actualStartMin > scheduledStartMin ? 'late' : 'early';
+  // Смена завершена - есть и начало, и конец
+  if (schedule.actualStart && schedule.actualEnd) {
+    return 'opened';
   }
   
-  if (endDiff >= 15) {
-    if (status === 'on-time' || status === 'early') {
-      status = actualEndMin < scheduledEndMin ? 'left-early' : 'left-late';
-    } else {
-      status = 'late';
-    }
+  // Смена открыта, но не закрыта - есть начало, но нет конца
+  if (schedule.actualStart && !schedule.actualEnd) {
+    return 'not-closed';
   }
   
-  return status;
+  // Смена запланирована, но не открыта - нет фактического начала
+  if (!schedule.actualStart) {
+    return 'not-opened';
+  }
+  
+  return 'not-opened';
 }
 
 export function getStatusColor(status: string): string {
   switch (status) {
-    case 'on-time': return 'bg-green-100 text-green-800';
-    case 'early': return 'bg-blue-100 text-blue-800';
-    case 'late': return 'bg-red-100 text-red-800';
-    case 'left-early': return 'bg-orange-100 text-orange-800';
-    case 'left-late': return 'bg-purple-100 text-purple-800';
-    case 'absent': return 'bg-gray-100 text-gray-800';
+    case 'opened': return 'bg-green-100 text-green-800';
+    case 'not-closed': return 'bg-yellow-100 text-yellow-800';
+    case 'not-opened': return 'bg-blue-100 text-blue-800';
+    case 'day-off': return 'bg-gray-100 text-gray-600';
     default: return 'bg-gray-50 text-gray-600';
   }
 }
 
 export function getStatusLabel(status: string): string {
   switch (status) {
-    case 'on-time': return 'Во время';
-    case 'early': return 'Раньше (≤15 мин)';
-    case 'late': return 'Опоздание (≥15 мин)';
-    case 'left-early': return 'Ушёл раньше';
-    case 'left-late': return 'Ушёл позже';
-    case 'absent': return 'Отсутствует';
-    case 'scheduled': return 'Запланировано';
+    case 'opened': return 'Смена открыта';
+    case 'not-closed': return 'Смена не закрыта';
+    case 'not-opened': return 'Смена не открыта';
+    case 'day-off': return 'Выходной';
     default: return status;
   }
 }
