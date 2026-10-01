@@ -28,7 +28,7 @@ export default function LoginPage() {
   };
 
   const handleDigit = (digit: string) => {
-    if (pin.length < 6) {
+    if (pin.length < 4) {
       setPin(pin + digit);
       setError('');
     }
@@ -57,10 +57,10 @@ export default function LoginPage() {
         <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 shadow-xl border border-white/10">
           {/* PIN Display */}
           <div className="flex justify-center gap-3 mb-6">
-            {[0, 1, 2, 3, 4, 5].map(i => (
+            {[0, 1, 2, 3].map(i => (
               <div
                 key={i}
-                className={`w-10 h-10 rounded-full border-2 flex items-center justify-center transition-all ${
+                className={`w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all ${
                   i < pin.length
                     ? 'bg-blue-500 border-blue-400 scale-110'
                     : 'border-white/30'
