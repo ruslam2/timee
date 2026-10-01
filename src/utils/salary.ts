@@ -119,7 +119,7 @@ export function calculateAdvance(
 ): number {
   const advanceSchedules = schedules.filter(s => {
     const d = new Date(s.date);
-    return d.getMonth() === month && d.getFullYear() === year && d.getDate() <= settings.advanceDay;
+    return s.employeeId === employee.id && d.getMonth() === month && d.getFullYear() === year && d.getDate() <= settings.advanceDay;
   });
   
   if (employee.payType === 'salary') {
@@ -139,7 +139,7 @@ export function calculateSalary(
 ): number {
   const salarySchedules = schedules.filter(s => {
     const d = new Date(s.date);
-    return d.getMonth() === month && d.getFullYear() === year && d.getDate() > settings.advanceDay;
+    return s.employeeId === employee.id && d.getMonth() === month && d.getFullYear() === year && d.getDate() > settings.advanceDay;
   });
   
   const totalFines = employee.fines
@@ -165,7 +165,7 @@ export function calculateFullMonth(
 ): { totalHours: number; totalEarnings: number; totalFines: number; netPay: number } {
   const monthSchedules = schedules.filter(s => {
     const d = new Date(s.date);
-    return d.getMonth() === month && d.getFullYear() === year;
+    return s.employeeId === employee.id && d.getMonth() === month && d.getFullYear() === year;
   });
   
   const totalHours = monthSchedules.reduce((sum, s) => sum + getEffectiveHours(s), 0);
