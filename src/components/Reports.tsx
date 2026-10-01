@@ -50,28 +50,42 @@ export default function Reports() {
         })
         .reduce((sum, f) => sum + f.amount, 0);
 
-      let earnings = 0;
       let advance = 0;
       let salary = 0;
 
       if (useCustomRange) {
+        // Для произвольного периода считаем пропорционально
         if (emp.payType === 'salary') {
-          earnings = emp.monthlySalary;
+          advance = emp.monthlySalary * 0.4;
+          salary = emp.monthlySalary * 0.6;
         } else {
-          earnings = totalHours * emp.hourlyRate;
+          const advanceHours = empSchedules
+            .filter(s => new Date(s.date).getDate() <= state.settings.advanceDay)
+            .reduce((sum, s) => sum + getEffectiveHours(s), 0);
+          const salaryHours = empSchedules
+            .filter(s => new Date(s.date).getDate() > state.settings.advanceDay)
+            .reduce((sum, s) => sum + getEffectiveHours(s), 0);
+          advance = advanceHours * emp.hourlyRate;
+          salary = salaryHours * emp.hourlyRate;
         }
       } else {
         advance = calculateAdvance(emp, state.schedules, selectedMonth, selectedYear, state.settings);
         salary = calculateSalary(emp, state.schedules, selectedMonth, selectedYear, state.settings);
-        earnings = advance + salary;
       }
 
-      const netPay = earnings + emp.bonus - totalFines;
+      // Итого зависит от типа отчёта
+      let netPay = 0;
+      if (reportType === 'advance') {
+        netPay = advance; // Только аванс, без премий и штрафов
+      } else if (reportType === 'salary') {
+        netPay = salary; // Зарплата уже включает премию и штрафы
+      } else {
+        netPay = advance + salary; // Полный = аванс + зарплата
+      }
 
       return {
         employee: emp,
         totalHours: Math.round(totalHours * 100) / 100,
-        earnings: Math.round(earnings * 100) / 100,
         advance: Math.round(advance * 100) / 100,
         salary: Math.round(salary * 100) / 100,
         bonus: emp.bonus,
@@ -80,26 +94,34 @@ export default function Reports() {
         schedules: empSchedules,
       };
     });
-  }, [employees, filteredSchedules, state, selectedMonth, selectedYear, useCustomRange, customStart, customEnd]);
+  }, [employees, filteredSchedules, state, selectedMonth, selectedYear, useCustomRange, customStart, customEnd, reportType]);
 
   const totalNetPay = reportData.reduce((sum, r) => sum + r.netPay, 0);
   const totalHours = reportData.reduce((sum, r) => sum + r.totalHours, 0);
   const totalFines = reportData.reduce((sum, r) => sum + r.fines, 0);
 
   const exportToExcel = () => {
-    const data = reportData.map(r => ({
-      'Сотрудник': r.employee.name,
-      'Должность': r.employee.position,
-      'Тип оплаты': r.employee.payType === 'hourly' ? 'Почасовая' : 'Оклад',
-      'Ставка/Оклад': r.employee.payType === 'hourly' ? r.employee.hourlyRate : r.employee.monthlySalary,
-      'Часы': r.totalHours,
-      'Начислено': r.earnings,
-      'Аванс': r.advance,
-      'Зарплата': r.salary,
-      'Премия': r.bonus,
-      'Штрафы': r.fines,
-      'Итого к выплате': r.netPay,
-    }));
+    const data = reportData.map(r => {
+      const row: Record<string, any> = {
+        'Сотрудник': r.employee.name,
+        'Должность': r.employee.position,
+        'Тип оплаты': r.employee.payType === 'hourly' ? 'Почасовая' : 'Оклад',
+        'Ставка/Оклад': r.employee.payType === 'hourly' ? r.employee.hourlyRate : r.employee.monthlySalary,
+        'Часы': r.totalHours,
+      };
+      
+      if (reportType === 'advance' || reportType === 'full') {
+        row['Аванс'] = r.advance;
+      }
+      if (reportType === 'salary' || reportType === 'full') {
+        row['Зарплата'] = r.salary;
+        row['Премия'] = r.bonus;
+        row['Штрафы'] = r.fines;
+      }
+      row['Итого к выплате'] = r.netPay;
+      
+      return row;
+    });
 
     const ws = XLSX.utils.json_to_sheet(data);
     const wb = XLSX.utils.book_new();
@@ -248,7 +270,9 @@ export default function Reports() {
               <DollarSign className="w-5 h-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-sm text-gray-500">Итого к выплате</p>
+              <p className="text-sm text-gray-500">
+                {reportType === 'advance' ? 'Итого аванс' : reportType === 'salary' ? 'Итого зарплата' : 'Итого к выплате'}
+              </p>
               <p className="text-xl font-bold text-gray-900">{totalNetPay.toLocaleString('ru-RU')} ₽</p>
             </div>
           </div>
@@ -264,17 +288,19 @@ export default function Reports() {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded-xl border p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
-              <AlertCircle className="w-5 h-5 text-red-600" />
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Штрафы</p>
-              <p className="text-xl font-bold text-gray-900">{totalFines.toLocaleString('ru-RU')} ₽</p>
+        {reportType !== 'advance' && (
+          <div className="bg-white rounded-xl border p-4">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">
+                <AlertCircle className="w-5 h-5 text-red-600" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-500">Штрафы</p>
+                <p className="text-xl font-bold text-gray-900">{totalFines.toLocaleString('ru-RU')} ₽</p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
         <div className="bg-white rounded-xl border p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -301,11 +327,15 @@ export default function Reports() {
                   <th className="px-4 py-3 text-right font-medium text-gray-600">Аванс</th>
                 )}
                 {(reportType === 'full' || reportType === 'salary') && (
-                  <th className="px-4 py-3 text-right font-medium text-gray-600">Зарплата</th>
+                  <>
+                    <th className="px-4 py-3 text-right font-medium text-gray-600">Зарплата</th>
+                    <th className="px-4 py-3 text-right font-medium text-gray-600">Премия</th>
+                    <th className="px-4 py-3 text-right font-medium text-gray-600">Штрафы</th>
+                  </>
                 )}
-                <th className="px-4 py-3 text-right font-medium text-gray-600">Премия</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-600">Штрафы</th>
-                <th className="px-4 py-3 text-right font-medium text-gray-600">Итого</th>
+                <th className="px-4 py-3 text-right font-medium text-gray-600">
+                  {reportType === 'advance' ? 'Итого аванс' : reportType === 'salary' ? 'Итого зарплата' : 'Итого'}
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -331,16 +361,18 @@ export default function Reports() {
                     </td>
                   )}
                   {(reportType === 'full' || reportType === 'salary') && (
-                    <td className="px-4 py-3 text-right text-gray-700">
-                      {r.salary.toLocaleString('ru-RU')} ₽
-                    </td>
+                    <>
+                      <td className="px-4 py-3 text-right text-gray-700">
+                        {r.salary.toLocaleString('ru-RU')} ₽
+                      </td>
+                      <td className="px-4 py-3 text-right text-green-600">
+                        +{r.bonus.toLocaleString('ru-RU')} ₽
+                      </td>
+                      <td className="px-4 py-3 text-right text-red-600">
+                        -{r.fines.toLocaleString('ru-RU')} ₽
+                      </td>
+                    </>
                   )}
-                  <td className="px-4 py-3 text-right text-green-600">
-                    +{r.bonus.toLocaleString('ru-RU')} ₽
-                  </td>
-                  <td className="px-4 py-3 text-right text-red-600">
-                    -{r.fines.toLocaleString('ru-RU')} ₽
-                  </td>
                   <td className="px-4 py-3 text-right font-bold text-gray-900">
                     {r.netPay.toLocaleString('ru-RU')} ₽
                   </td>
@@ -357,16 +389,18 @@ export default function Reports() {
                   </td>
                 )}
                 {(reportType === 'full' || reportType === 'salary') && (
-                  <td className="px-4 py-3 text-right text-gray-900">
-                    {reportData.reduce((s, r) => s + r.salary, 0).toLocaleString('ru-RU')} ₽
-                  </td>
+                  <>
+                    <td className="px-4 py-3 text-right text-gray-900">
+                      {reportData.reduce((s, r) => s + r.salary, 0).toLocaleString('ru-RU')} ₽
+                    </td>
+                    <td className="px-4 py-3 text-right text-green-600">
+                      +{reportData.reduce((s, r) => s + r.bonus, 0).toLocaleString('ru-RU')} ₽
+                    </td>
+                    <td className="px-4 py-3 text-right text-red-600">
+                      -{totalFines.toLocaleString('ru-RU')} ₽
+                    </td>
+                  </>
                 )}
-                <td className="px-4 py-3 text-right text-green-600">
-                  +{reportData.reduce((s, r) => s + r.bonus, 0).toLocaleString('ru-RU')} ₽
-                </td>
-                <td className="px-4 py-3 text-right text-red-600">
-                  -{totalFines.toLocaleString('ru-RU')} ₽
-                </td>
                 <td className="px-4 py-3 text-right text-gray-900">
                   {totalNetPay.toLocaleString('ru-RU')} ₽
                 </td>

@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
-import { LogOut, Clock, DollarSign, Calendar, TrendingUp, AlertCircle } from 'lucide-react';
+import { LogOut, Clock, DollarSign, Calendar, TrendingUp, AlertCircle, Play, Square } from 'lucide-react';
 import { getEffectiveHours, calculateFullMonth, calculateAdvance, calculateSalary, getStatusColor, getStatusLabel, getScheduleStatus } from '../utils/salary';
 
 export default function EmployeeDashboard() {
@@ -12,6 +12,22 @@ export default function EmployeeDashboard() {
   const user = state.currentUser!;
   const monthNames = ['Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
     'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'];
+
+  const today = new Date().toISOString().split('T')[0];
+  const currentTime = new Date().toTimeString().slice(0, 5);
+
+  // Найти сегодняшнюю смену
+  const todaySchedule = useMemo(() => {
+    return state.schedules.find(s => s.employeeId === user.id && s.date === today);
+  }, [state.schedules, user.id, today]);
+
+  // Статус текущей смены
+  const shiftStatus = useMemo(() => {
+    if (!todaySchedule) return 'no-schedule';
+    if (!todaySchedule.actualStart) return 'not-started';
+    if (!todaySchedule.actualEnd) return 'in-progress';
+    return 'completed';
+  }, [todaySchedule]);
 
   const userSchedules = useMemo(() => {
     return state.schedules
@@ -34,6 +50,35 @@ export default function EmployeeDashboard() {
   const salary = useMemo(() => {
     return calculateSalary(user, state.schedules, selectedMonth, selectedYear, state.settings);
   }, [user, state.schedules, selectedMonth, selectedYear, state.settings]);
+
+  // Открытие смены
+  const handleStartShift = () => {
+    if (!todaySchedule) {
+      alert('На сегодня нет запланированной смены');
+      return;
+    }
+    
+    const updated = {
+      ...todaySchedule,
+      actualStart: currentTime,
+    };
+    updated.status = getScheduleStatus(updated) as any;
+    
+    dispatch({ type: 'UPDATE_SCHEDULE', payload: updated });
+  };
+
+  // Закрытие смены
+  const handleEndShift = () => {
+    if (!todaySchedule) return;
+    
+    const updated = {
+      ...todaySchedule,
+      actualEnd: currentTime,
+    };
+    updated.status = getScheduleStatus(updated) as any;
+    
+    dispatch({ type: 'UPDATE_SCHEDULE', payload: updated });
+  };
 
   const handleLogout = () => {
     dispatch({ type: 'LOGOUT' });
@@ -65,6 +110,71 @@ export default function EmployeeDashboard() {
           </button>
         </div>
       </header>
+
+      {/* Shift Control Panel */}
+      <div className="max-w-4xl mx-auto px-4 pt-4">
+        <div className={`rounded-xl border p-4 ${
+          shiftStatus === 'in-progress' 
+            ? 'bg-green-50 border-green-200' 
+            : shiftStatus === 'completed'
+            ? 'bg-gray-50 border-gray-200'
+            : shiftStatus === 'not-started'
+            ? 'bg-blue-50 border-blue-200'
+            : 'bg-yellow-50 border-yellow-200'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="font-semibold text-gray-900">
+                {shiftStatus === 'in-progress' && '🟢 Смена идёт'}
+                {shiftStatus === 'completed' && '✅ Смена завершена'}
+                {shiftStatus === 'not-started' && '🔵 Смена не начата'}
+                {shiftStatus === 'no-schedule' && '⚠️ Нет смены на сегодня'}
+              </h3>
+              {todaySchedule && (
+                <p className="text-sm text-gray-600 mt-1">
+                  План: {todaySchedule.startTime} — {todaySchedule.endTime}
+                  {todaySchedule.actualStart && (
+                    <span className="ml-2">
+                      | Факт начало: {todaySchedule.actualStart}
+                      {todaySchedule.actualEnd && ` — ${todaySchedule.actualEnd}`}
+                    </span>
+                  )}
+                </p>
+              )}
+            </div>
+            <div>
+              {shiftStatus === 'not-started' && (
+                <button
+                  onClick={handleStartShift}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg shadow-green-600/30"
+                >
+                  <Play className="w-4 h-4" />
+                  Начать смену
+                </button>
+              )}
+              {shiftStatus === 'in-progress' && (
+                <button
+                  onClick={handleEndShift}
+                  className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-lg shadow-red-600/30"
+                >
+                  <Square className="w-4 h-4" />
+                  Завершить смену
+                </button>
+              )}
+              {shiftStatus === 'completed' && (
+                <span className="px-4 py-2 bg-green-100 text-green-700 rounded-lg text-sm font-medium">
+                  Завершена ✓
+                </span>
+              )}
+              {shiftStatus === 'no-schedule' && (
+                <span className="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-medium">
+                  Выходной
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Month Selector */}
       <div className="max-w-4xl mx-auto px-4 pt-4">
@@ -184,7 +294,7 @@ export default function EmployeeDashboard() {
                             </span>
                             {schedule.actualStart && (
                               <span className="text-sm text-gray-400">
-                                | Факт: {schedule.actualStart} — {schedule.actualEnd}
+                                | Факт: {schedule.actualStart} — {schedule.actualEnd || '...'}
                               </span>
                             )}
                           </div>
@@ -259,7 +369,7 @@ export default function EmployeeDashboard() {
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">Премия</p>
-                      <p className="text-xs text-gray-500">Бонус за период</p>
+                      <p className="text-xs text-gray-500">Учитывается в зарплате</p>
                     </div>
                   </div>
                   <span className="font-bold text-green-600">+{user.bonus.toLocaleString('ru-RU')} ₽</span>
@@ -273,7 +383,7 @@ export default function EmployeeDashboard() {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">Штрафы</p>
-                        <p className="text-xs text-gray-500">{user.fines.length} штраф(ов)</p>
+                        <p className="text-xs text-gray-500">Вычитаются из зарплаты</p>
                       </div>
                     </div>
                     <span className="font-bold text-red-600">-{monthData.totalFines.toLocaleString('ru-RU')} ₽</span>
