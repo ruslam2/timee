@@ -2,7 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { ScheduleEntry } from '../types';
 import { v4 as uuidv4 } from 'uuid';
-import { Calendar, ChevronLeft, ChevronRight, Save, Bell, Clock } from 'lucide-react';
+import { Calendar, ChevronLeft, ChevronRight, Save, Bell, Clock, Trash2 } from 'lucide-react';
 import { getStatusColor, getStatusLabel, getScheduleStatus } from '../utils/salary';
 import { notifyScheduleChange, notifyDayStart, notifyDayEnd } from '../utils/telegram';
 
@@ -72,6 +72,26 @@ export default function ScheduleEditor() {
     }
     
     setEditingCell(null);
+  };
+
+  const handleDeleteSchedule = () => {
+    if (!editingCell) return;
+    
+    const { empId, date } = editingCell;
+    const existing = getSchedule(empId, date);
+    
+    if (!existing) {
+      setEditingCell(null);
+      return;
+    }
+    
+    const empName = employees.find(e => e.id === empId)?.name || 'Сотрудник';
+    const dateFormatted = new Date(date).toLocaleDateString('ru-RU');
+    
+    if (confirm(`Удалить смену ${empName} на ${dateFormatted}?`)) {
+      dispatch({ type: 'DELETE_SCHEDULE', payload: existing.id });
+      setEditingCell(null);
+    }
   };
 
   const handleFillMonth = (empId: string) => {
@@ -312,6 +332,16 @@ export default function ScheduleEditor() {
             </div>
 
             <div className="flex gap-3 mt-6">
+              {getSchedule(editingCell.empId, editingCell.date) && (
+                <button
+                  onClick={handleDeleteSchedule}
+                  className="px-4 py-2 bg-red-50 text-red-600 border border-red-200 rounded-lg hover:bg-red-100 flex items-center gap-2"
+                  title="Удалить смену"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Удалить
+                </button>
+              )}
               <button
                 onClick={() => setEditingCell(null)}
                 className="flex-1 px-4 py-2 border rounded-lg hover:bg-gray-50"
