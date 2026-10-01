@@ -200,6 +200,96 @@ export default function ScheduleEditor() {
         <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded">Выходной</span>
       </div>
 
+      {/* Shift Summary */}
+      {(() => {
+        const monthSchedules = state.schedules.filter(s => {
+          const d = new Date(s.date);
+          return d.getMonth() === month && d.getFullYear() === year;
+        });
+
+        const opened: string[] = [];
+        const notClosed: string[] = [];
+        const notOpened: string[] = [];
+
+        monthSchedules.forEach(schedule => {
+          const emp = employees.find(e => e.id === schedule.employeeId);
+          if (!emp) return;
+
+          const status = getScheduleStatus(schedule);
+          if (status === 'opened') {
+            if (!opened.includes(emp.name)) opened.push(emp.name);
+          } else if (status === 'not-closed') {
+            if (!notClosed.includes(emp.name)) notClosed.push(emp.name);
+          } else if (status === 'not-opened') {
+            if (!notOpened.includes(emp.name)) notOpened.push(emp.name);
+          }
+        });
+
+        return (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div className="bg-green-50 border border-green-200 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold text-green-900 text-sm">Смена открыта</h4>
+                <span className="bg-green-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  {opened.length}
+                </span>
+              </div>
+              {opened.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {opened.map((name, i) => (
+                    <span key={i} className="text-xs text-green-700 bg-green-100 px-2 py-1 rounded">
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-green-600 italic">Нет сотрудников</p>
+              )}
+            </div>
+
+            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold text-yellow-900 text-sm">Смена не закрыта</h4>
+                <span className="bg-yellow-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  {notClosed.length}
+                </span>
+              </div>
+              {notClosed.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {notClosed.map((name, i) => (
+                    <span key={i} className="text-xs text-yellow-700 bg-yellow-100 px-2 py-1 rounded">
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-yellow-600 italic">Нет сотрудников</p>
+              )}
+            </div>
+
+            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4">
+              <div className="flex items-center justify-between mb-2">
+                <h4 className="font-semibold text-blue-900 text-sm">Смена не открыта</h4>
+                <span className="bg-blue-600 text-white text-xs font-bold px-2 py-1 rounded-full">
+                  {notOpened.length}
+                </span>
+              </div>
+              {notOpened.length > 0 ? (
+                <div className="flex flex-wrap gap-1">
+                  {notOpened.map((name, i) => (
+                    <span key={i} className="text-xs text-blue-700 bg-blue-100 px-2 py-1 rounded">
+                      {name}
+                    </span>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-xs text-blue-600 italic">Нет сотрудников</p>
+              )}
+            </div>
+          </div>
+        );
+      })()}
+
       {/* Schedule Table */}
       <div className="bg-white rounded-xl border overflow-x-auto">
         <table className="w-full text-xs">
