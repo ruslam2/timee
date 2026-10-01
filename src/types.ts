@@ -34,7 +34,7 @@ export interface ScheduleEntry {
   endTime: string;
   actualStart?: string;
   actualEnd?: string;
-  status: 'scheduled' | 'on-time' | 'early' | 'late' | 'left-early' | 'left-late' | 'absent';
+  status: 'scheduled' | 'on-time' | 'early' | 'late' | 'left-early' | 'left-late' | 'absent' | 'opened' | 'not-closed' | 'not-opened' | 'day-off';
 }
 
 export interface Settings {

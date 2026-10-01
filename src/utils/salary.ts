@@ -61,6 +61,11 @@ export function getStatusLabel(status: string): string {
   }
 }
 
+export function roundToQuarter(minutes: number): number {
+  // Округление до 15 минут
+  return Math.round(minutes / 15) * 15;
+}
+
 export function getEffectiveHours(schedule: ScheduleEntry): number {
   if (!schedule.actualStart || !schedule.actualEnd) {
     return calculateScheduledHours(schedule);
@@ -87,7 +92,11 @@ export function getEffectiveHours(schedule: ScheduleEntry): number {
     effectiveEnd = scheduledEndMin;
   }
   
-  return Math.max(0, (effectiveEnd - effectiveStart) / 60);
+  // Округляем общее время до 15 минут
+  const totalMinutes = effectiveEnd - effectiveStart;
+  const roundedMinutes = roundToQuarter(totalMinutes);
+  
+  return Math.max(0, roundedMinutes / 60);
 }
 
 export function formatHours(hours: number): string {

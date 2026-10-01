@@ -1,5 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { ScheduleEntry } from '../types';
 import { LogOut, Clock, DollarSign, Calendar, TrendingUp, AlertCircle, Play, Square } from 'lucide-react';
 import { getEffectiveHours, calculateFullMonth, calculateAdvance, calculateSalary, getStatusColor, getStatusLabel, getScheduleStatus, formatHours } from '../utils/salary';
 
@@ -25,8 +26,9 @@ export default function EmployeeDashboard() {
   const shiftStatus = useMemo(() => {
     if (!todaySchedule) return 'no-schedule';
     if (!todaySchedule.actualStart) return 'not-started';
-    if (!todaySchedule.actualEnd) return 'in-progress';
-    return 'completed';
+    if (todaySchedule.actualStart && !todaySchedule.actualEnd) return 'in-progress';
+    if (todaySchedule.actualStart && todaySchedule.actualEnd) return 'completed';
+    return 'no-schedule';
   }, [todaySchedule]);
 
   const userSchedules = useMemo(() => {
@@ -54,7 +56,17 @@ export default function EmployeeDashboard() {
   // Открытие смены
   const handleStartShift = () => {
     if (!todaySchedule) {
-      alert('На сегодня нет запланированной смены');
+      // Создаём новую смену, если её нет в графике
+      const newSchedule: ScheduleEntry = {
+        id: crypto.randomUUID(),
+        employeeId: user.id,
+        date: today,
+        startTime: currentTime,
+        endTime: '18:00', // Временное значение, можно будет изменить
+        actualStart: currentTime,
+        status: 'not-closed',
+      };
+      dispatch({ type: 'ADD_SCHEDULE', payload: newSchedule });
       return;
     }
     
@@ -167,9 +179,13 @@ export default function EmployeeDashboard() {
                 </span>
               )}
               {shiftStatus === 'no-schedule' && (
-                <span className="px-4 py-2 bg-yellow-100 text-yellow-700 rounded-lg text-sm font-medium">
-                  Выходной
-                </span>
+                <button
+                  onClick={handleStartShift}
+                  className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors shadow-lg shadow-green-600/30"
+                >
+                  <Play className="w-4 h-4" />
+                  Начать смену
+                </button>
               )}
             </div>
           </div>
