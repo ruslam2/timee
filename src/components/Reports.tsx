@@ -8,6 +8,7 @@ import {
   calculateFullMonth,
   getEffectiveHours,
   formatDate,
+  formatHours,
 } from '../utils/salary';
 
 type ReportType = 'advance' | 'salary' | 'full';
@@ -284,7 +285,7 @@ export default function Reports() {
             </div>
             <div>
               <p className="text-sm text-gray-500">Всего часов</p>
-              <p className="text-xl font-bold text-gray-900">{totalHours} ч</p>
+              <p className="text-xl font-bold text-gray-900">{formatHours(totalHours)}</p>
             </div>
           </div>
         </div>
@@ -354,7 +355,7 @@ export default function Reports() {
                       {r.employee.payType === 'salary' ? 'Оклад' : 'Почасовая'}
                     </span>
                   </td>
-                  <td className="px-4 py-3 text-center text-gray-700">{r.totalHours}</td>
+                  <td className="px-4 py-3 text-center text-gray-700">{formatHours(r.totalHours)}</td>
                   {(reportType === 'full' || reportType === 'advance') && (
                     <td className="px-4 py-3 text-right text-gray-700">
                       {r.advance.toLocaleString('ru-RU')} ₽
@@ -382,7 +383,7 @@ export default function Reports() {
             <tfoot>
               <tr className="bg-gray-50 font-bold">
                 <td className="px-4 py-3 text-gray-900" colSpan={2}>ИТОГО</td>
-                <td className="px-4 py-3 text-center text-gray-900">{totalHours}</td>
+                <td className="px-4 py-3 text-center text-gray-900">{formatHours(totalHours)}</td>
                 {(reportType === 'full' || reportType === 'advance') && (
                   <td className="px-4 py-3 text-right text-gray-900">
                     {reportData.reduce((s, r) => s + r.advance, 0).toLocaleString('ru-RU')} ₽

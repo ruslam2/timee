@@ -109,6 +109,17 @@ export function getEffectiveHours(schedule: ScheduleEntry): number {
   return Math.max(0, (effectiveEnd - effectiveStart) / 60);
 }
 
+export function formatHours(hours: number): string {
+  const totalMinutes = Math.round(hours * 60);
+  const h = Math.floor(totalMinutes / 60);
+  const m = totalMinutes % 60;
+  
+  if (m === 0) {
+    return `${h}ч`;
+  }
+  return `${h}ч ${m}мин`;
+}
+
 export function calculateAdvance(
   employee: Employee,
   schedules: ScheduleEntry[],

@@ -1,7 +1,7 @@
 import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
 import { LogOut, Clock, DollarSign, Calendar, TrendingUp, AlertCircle, Play, Square } from 'lucide-react';
-import { getEffectiveHours, calculateFullMonth, calculateAdvance, calculateSalary, getStatusColor, getStatusLabel, getScheduleStatus } from '../utils/salary';
+import { getEffectiveHours, calculateFullMonth, calculateAdvance, calculateSalary, getStatusColor, getStatusLabel, getScheduleStatus, formatHours } from '../utils/salary';
 
 export default function EmployeeDashboard() {
   const { state, dispatch } = useApp();
@@ -215,7 +215,7 @@ export default function EmployeeDashboard() {
               <Clock className="w-4 h-4 text-green-500" />
               <span className="text-xs text-gray-500">Часов</span>
             </div>
-            <p className="text-xl font-bold text-gray-900">{totalHours}</p>
+            <p className="text-xl font-bold text-gray-900">{formatHours(totalHours)}</p>
           </div>
           <div className="bg-white rounded-xl border p-4">
             <div className="flex items-center gap-2 mb-1">
@@ -304,7 +304,7 @@ export default function EmployeeDashboard() {
                             {getStatusLabel(status)}
                           </span>
                           <p className="text-sm font-medium text-gray-700 mt-1">
-                            {effectiveHours} ч
+                            {formatHours(effectiveHours)}
                           </p>
                         </div>
                       </div>
@@ -323,12 +323,12 @@ export default function EmployeeDashboard() {
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Всего часов</p>
-                  <p className="font-bold text-gray-900">{totalHours}</p>
+                  <p className="font-bold text-gray-900">{formatHours(totalHours)}</p>
                 </div>
                 <div>
                   <p className="text-xs text-gray-500">Ср. часов/смена</p>
                   <p className="font-bold text-gray-900">
-                    {totalShifts > 0 ? (totalHours / totalShifts).toFixed(1) : 0}
+                    {totalShifts > 0 ? formatHours(totalHours / totalShifts) : '0ч'}
                   </p>
                 </div>
               </div>
@@ -355,7 +355,7 @@ export default function EmployeeDashboard() {
                       <p className="text-xs text-gray-500">
                         {user.payType === 'salary'
                           ? `Оклад ${user.monthlySalary.toLocaleString('ru-RU')} ₽`
-                          : `${totalHours} ч × ${user.hourlyRate} ₽/ч`}
+                          : `${formatHours(totalHours)} × ${user.hourlyRate} ₽/ч`}
                       </p>
                     </div>
                   </div>
