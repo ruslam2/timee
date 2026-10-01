@@ -104,8 +104,29 @@ export default function ScheduleEditor() {
     const startDate = days[0];
     const endDate = days[days.length - 1];
     
+    // Подсчёт сотрудников с Chat ID
+    const affectedIds = new Set(monthSchedules.map(s => s.employeeId));
+    const affectedEmployees = employees.filter(e => affectedIds.has(e.id) && e.role !== 'admin');
+    const withChatId = affectedEmployees.filter(e => e.telegramChatId);
+    const withoutChatId = affectedEmployees.filter(e => !e.telegramChatId);
+    
+    if (!state.settings.telegramBotToken) {
+      alert('⚠️ Не указан токен Telegram бота в настройках!');
+      return;
+    }
+    
+    if (withChatId.length === 0) {
+      alert('⚠️ Ни у одного сотрудника не указан Telegram Chat ID!\n\nУзнать ID можно написав боту @userinfobot');
+      return;
+    }
+    
     await notifyScheduleChange(employees, monthSchedules, startDate, endDate, state.settings);
-    alert('Уведомления отправлены всем сотрудникам!');
+    
+    let message = `✅ Уведомления отправлены!\n\nОтправлено: ${withChatId.length} сотр.`;
+    if (withoutChatId.length > 0) {
+      message += `\nПропущено (нет ID): ${withoutChatId.length}\n\n${withoutChatId.map(e => `• ${e.name}`).join('\n')}`;
+    }
+    alert(message);
   };
 
   const handleNotifyDay = async (type: 'start' | 'end', date: string) => {

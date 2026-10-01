@@ -139,6 +139,17 @@ export default function AdminSettings() {
               • В конце рабочего дня — сотрудникам с запланированной сменой
             </p>
           </div>
+          <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg">
+            <p className="text-sm text-amber-800">
+              <strong>⚠️ Важно:</strong> Для каждого сотрудника должен быть указан <strong>Telegram Chat ID</strong> (числовой).<br /><br />
+              <strong>Как узнать Chat ID:</strong><br />
+              1. Откройте Telegram<br />
+              2. Найдите бота <code className="bg-amber-100 px-1 rounded">@userinfobot</code><br />
+              3. Нажмите «Start»<br />
+              4. Бот пришлёт ваш числовой ID — скопируйте его<br />
+              5. Укажите этот ID в карточке сотрудника
+            </p>
+          </div>
         </div>
       </div>
     </div>

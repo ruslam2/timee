@@ -4,6 +4,7 @@ export interface Employee {
   pin: string;
   role: 'admin' | 'employee';
   telegramNick: string;
+  telegramChatId: string;
   position: string;
   payType: 'hourly' | 'salary';
   hourlyRate: number;

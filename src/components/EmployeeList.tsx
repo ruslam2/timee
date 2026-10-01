@@ -12,6 +12,7 @@ export default function EmployeeList() {
     name: '',
     pin: '',
     telegramNick: '',
+    telegramChatId: '',
     position: '',
     payType: 'hourly',
     hourlyRate: 0,
@@ -28,6 +29,7 @@ export default function EmployeeList() {
       name: '',
       pin: '',
       telegramNick: '',
+      telegramChatId: '',
       position: '',
       payType: 'hourly',
       hourlyRate: 0,
@@ -44,6 +46,7 @@ export default function EmployeeList() {
       name: emp.name,
       pin: emp.pin,
       telegramNick: emp.telegramNick,
+      telegramChatId: emp.telegramChatId,
       position: emp.position,
       payType: emp.payType,
       hourlyRate: emp.hourlyRate,
@@ -69,6 +72,7 @@ export default function EmployeeList() {
         pin: formData.pin || '',
         role: 'employee',
         telegramNick: formData.telegramNick || '',
+        telegramChatId: formData.telegramChatId || '',
         position: formData.position || '',
         payType: formData.payType || 'hourly',
         hourlyRate: formData.hourlyRate || 0,
@@ -200,6 +204,22 @@ export default function EmployeeList() {
                     className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     placeholder="@username"
                   />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Telegram Chat ID *
+                  </label>
+                  <input
+                    type="text"
+                    value={formData.telegramChatId || ''}
+                    onChange={e => setFormData({ ...formData, telegramChatId: e.target.value.replace(/\D/g, '') })}
+                    className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    placeholder="123456789"
+                  />
+                  <p className="text-xs text-gray-500 mt-1">
+                    Узнать ID: напишите боту @userinfobot
+                  </p>
                 </div>
 
                 <div>

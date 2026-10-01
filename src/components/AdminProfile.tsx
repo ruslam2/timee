@@ -12,6 +12,7 @@ export default function AdminProfile() {
     email: admin?.email || '',
     address: admin?.address || '',
     telegramNick: admin?.telegramNick || '',
+    telegramChatId: admin?.telegramChatId || '',
     position: admin?.position || '',
     monthlySalary: admin?.monthlySalary || 0,
   });
@@ -152,6 +153,23 @@ export default function AdminProfile() {
                 className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
                 placeholder="@admin"
               />
+            </div>
+
+            <div>
+              <label className="flex items-center gap-2 text-sm font-medium text-gray-700 mb-1">
+                <span className="text-lg">🆔</span>
+                Telegram Chat ID *
+              </label>
+              <input
+                type="text"
+                value={formData.telegramChatId}
+                onChange={e => setFormData({ ...formData, telegramChatId: e.target.value.replace(/\D/g, '') })}
+                className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500"
+                placeholder="123456789"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Узнать ID: напишите боту @userinfobot в Telegram
+              </p>
             </div>
           </div>
         </div>

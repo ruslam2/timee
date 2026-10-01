@@ -15,6 +15,7 @@ const defaultAdmin: Employee = {
   pin: '0000',
   role: 'admin',
   telegramNick: '@admin_bot',
+  telegramChatId: '',
   position: 'Администратор',
   payType: 'salary',
   hourlyRate: 0,

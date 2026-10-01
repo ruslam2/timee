@@ -6,7 +6,14 @@ export async function sendTelegramNotification(
   settings: Settings
 ): Promise<boolean> {
   if (!settings.telegramBotToken) {
-    console.log(`[Telegram Mock] To ${employee.telegramNick}: ${message}`);
+    console.log(`[Telegram Mock] To chat_id=${employee.telegramChatId}: ${message}`);
+    return false;
+  }
+
+  // Используем числовой chat_id, а не username
+  const chatId = employee.telegramChatId;
+  if (!chatId) {
+    console.warn(`[Telegram] У сотрудника ${employee.name} не указан Chat ID`);
     return false;
   }
 
@@ -17,12 +24,18 @@ export async function sendTelegramNotification(
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          chat_id: employee.telegramNick,
+          chat_id: chatId,
           text: message,
           parse_mode: 'HTML',
         }),
       }
     );
+    
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error(`[Telegram] Ошибка отправки:`, errorData);
+    }
+    
     return response.ok;
   } catch (error) {
     console.error('Telegram notification failed:', error);
@@ -39,8 +52,16 @@ export async function notifyScheduleChange(
 ): Promise<void> {
   const affectedEmployees = new Set(schedules.map(s => s.employeeId));
   
+  let sentCount = 0;
+  let failedCount = 0;
+  
   for (const employee of employees) {
     if (!affectedEmployees.has(employee.id) || employee.role === 'admin') continue;
+    if (!employee.telegramChatId) {
+      console.warn(`[Telegram] Пропущен ${employee.name} — нет Chat ID`);
+      failedCount++;
+      continue;
+    }
     
     const employeeSchedules = schedules
       .filter(s => s.employeeId === employee.id)
@@ -54,8 +75,12 @@ export async function notifyScheduleChange(
       scheduleText += `${formatDateRu(s.date)}: ${s.startTime} — ${s.endTime}\n`;
     }
     
-    await sendTelegramNotification(employee, scheduleText, settings);
+    const success = await sendTelegramNotification(employee, scheduleText, settings);
+    if (success) sentCount++;
+    else failedCount++;
   }
+  
+  return;
 }
 
 export async function notifyDayStart(
@@ -69,6 +94,7 @@ export async function notifyDayStart(
   for (const schedule of daySchedules) {
     const employee = employees.find(e => e.id === schedule.employeeId);
     if (!employee || employee.role === 'admin') continue;
+    if (!employee.telegramChatId) continue;
     
     const message = `☀️ <b>Начало рабочего дня</b>\n\n` +
       `Сегодня: ${formatDateRu(date)}\n` +
@@ -89,6 +115,7 @@ export async function notifyDayEnd(
   for (const schedule of daySchedules) {
     const employee = employees.find(e => e.id === schedule.employeeId);
     if (!employee || employee.role === 'admin') continue;
+    if (!employee.telegramChatId) continue;
     
     const message = `🌙 <b>Конец рабочего дня</b>\n\n` +
       `Сегодня: ${formatDateRu(date)}\n` +
